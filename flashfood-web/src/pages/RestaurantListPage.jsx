@@ -8,14 +8,36 @@ export default function RestaurantListPage() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        api.get('/restaurants').then(res => setRestaurants(res.data));
+        carregarRestaurantes();
     }, []);
+
+    const carregarRestaurantes = () => {
+        api.get('/restaurants').then(res => setRestaurants(res.data));
+    };
+
+    const handleDelete = async (e, id) => {
+        e.stopPropagation(); // Evita abrir o card ao clicar no deletar
+        if (window.confirm('Tem certeza que deseja excluir este restaurante?')) {
+            await api.delete(`/restaurants/${id}`);
+            carregarRestaurantes();
+        }
+    };
+
+    const handleEdit = (e, id) => {
+        e.stopPropagation();
+        navigate(`/restaurants/edit/${id}`);
+    };
 
     return (
         <>
             <Header />
             <div className="container">
-                <h2 style={{ margin: '30px 0 20px', fontSize: '20px', fontWeight: 'bold' }}>Lojas</h2>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '30px 0 20px'}}>
+                    <h2 style={{ fontSize: '20px', fontWeight: 'bold' }}>Lojas</h2>
+                    <button onClick={() => navigate('/restaurants/new')} className="btn-primary" style={{width: 'auto', padding: '10px 20px'}}>
+                        + Novo Restaurante
+                    </button>
+                </div>
                 
                 <div style={styles.grid}>
                     {restaurants.map(rest => (
@@ -33,10 +55,12 @@ export default function RestaurantListPage() {
                                     <span style={styles.star}>★ {rest.nota}</span>
                                     <span style={styles.dot}>•</span>
                                     <span>{rest.categoria}</span>
-                                    <span style={styles.dot}>•</span>
-                                    <span>20-30 min</span>
                                 </div>
-                                <span style={styles.delivery}>Grátis</span>
+                                
+                                <div style={styles.actions}>
+                                    <button onClick={(e) => handleEdit(e, rest.id)} style={styles.actionBtn}>Editar</button>
+                                    <button onClick={(e) => handleDelete(e, rest.id)} style={{...styles.actionBtn, color: 'red'}}>Excluir</button>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -49,7 +73,7 @@ export default function RestaurantListPage() {
 const styles = {
     grid: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', // Responsivo
+        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
         gap: '20px'
     },
     card: {
@@ -62,11 +86,12 @@ const styles = {
         alignItems: 'center',
         gap: '15px',
         transition: 'box-shadow 0.2s',
+        position: 'relative'
     },
     imageContainer: {
         width: '60px',
         height: '60px',
-        borderRadius: '50%', // Logo redondo
+        borderRadius: '50%',
         overflow: 'hidden',
         flexShrink: 0
     },
@@ -78,7 +103,8 @@ const styles = {
     info: {
         display: 'flex',
         flexDirection: 'column',
-        gap: '4px'
+        gap: '4px',
+        width: '100%'
     },
     name: {
         fontSize: '16px',
@@ -91,16 +117,19 @@ const styles = {
         display: 'flex',
         alignItems: 'center'
     },
-    star: {
-        color: '#fcbb00',
-        fontWeight: 'bold'
+    star: { color: '#fcbb00', fontWeight: 'bold' },
+    dot: { margin: '0 5px', color: '#ccc' },
+    actions: {
+        marginTop: '10px',
+        display: 'flex',
+        gap: '10px'
     },
-    dot: {
-        margin: '0 5px',
-        color: '#ccc'
-    },
-    delivery: {
+    actionBtn: {
         fontSize: '12px',
-        color: '#00a296' // Verde do "Grátis"
+        background: 'none',
+        border: '1px solid #ccc',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        cursor: 'pointer'
     }
 };
